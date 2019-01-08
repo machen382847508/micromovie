@@ -13,3 +13,37 @@ def login():
 @home.route("/logout/")
 def logout():
     return redirect(url_for("home.login"))
+
+@home.route("/regist/")
+def regist():
+    return render_template("home/regist.html")
+
+@home.route("/user/")
+def user():
+    return render_template("home/user.html")
+
+@home.route("/pwd/")
+def pwd():
+    return render_template("home/pwd.html")
+
+@home.route("/comments/")
+def comments():
+    return render_template("home/comments.html")
+
+@home.route("/loginlog/")
+def loginlog():
+    return render_template("home/loginlog.html")
+
+@home.route("/moviecol/")
+def moviecol():
+    return render_template("home/moviecol.html")
+
+#动态
+@home.route("/amination/")
+def amination():
+    return render_template("home/amination.html")
+
+#搜索界面
+@home.route("/search/")
+def search():
+    return render_template("home/search.html")
