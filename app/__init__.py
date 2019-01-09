@@ -1,5 +1,6 @@
 #coding:utf8
 from flask import Flask
+from flask import render_template
 
 app = Flask(__name__)
 
@@ -10,3 +11,8 @@ from app.admin import admin as admin_blueprint
 
 app.register_blueprint(home_blueprint)
 app.register_blueprint(admin_blueprint,url_prefix="/admin")
+
+#错误地址捕获
+@app.errorhandler(404)
+def page_not_find(error):
+    return render_template('home/404.html'),404

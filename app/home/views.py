@@ -47,3 +47,9 @@ def amination():
 @home.route("/search/")
 def search():
     return render_template("home/search.html")
+
+#详情
+@home.route("/play/")
+def play():
+    return render_template("home/play.html")
+
