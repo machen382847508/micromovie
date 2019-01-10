@@ -1,15 +1,7 @@
 #coding:utf8
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
+
 from datetime import datetime
-import pymysql
-
-app = Flask(__name__)
-
-app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:x5@localhost:3306/micromovie"
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS	"] = True
-
-db = SQLAlchemy(app)
+from app import db
 
 #会员模型
 class User(db.Model):
@@ -144,6 +136,14 @@ class Admin(db.Model):
     def __repr__(self):
         return '<Admin %r>' % self.name
 
+    def check_pwd(self, pwd):
+        # from werkzeug.security import check_password_hash
+        # return check_password_hash(self.pwd, pwd)  # 验证密码是否正确，返回True和False
+        if (self.pwd == pwd):
+            return True
+        else:
+            return False
+
 #管理员登录日志
 class Adminlog(db.Model):
     __tablename__ = "adminlog"
@@ -167,5 +167,3 @@ class Oplog(db.Model):
     def __repr__(self):
         return '<Oplog %r>' % self.id
 
-if __name__ == "__main__":
-    db.create_all()
