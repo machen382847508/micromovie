@@ -2,12 +2,14 @@
 from flask import Flask,render_template
 from flask_sqlalchemy import SQLAlchemy
 import pymysql
+import os
 
 app = Flask(__name__)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:x5@localhost:3306/micromovie"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 app.config["SECRET_KEY"]='8ac6eb5d94a449dca18f0501eef3e591'
+app.config["UP_DIR"] = os.path.join(os.path.dirname(__file__),"static/upload/")
 app.debug = True
 db = SQLAlchemy(app)
 from app.home import home as home_blueprint
