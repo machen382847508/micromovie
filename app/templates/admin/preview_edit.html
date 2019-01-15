@@ -37,6 +37,8 @@
                     <div class="box-footer">
                         {{ form.csrf_token }}
                         {{ form.submit }}
+                        <a class="btn btn-default" style="margin-left:10px;color: #367fa9"
+                           href="{{ url_for('admin.preview_list', page=1) }}">取消</a>
                     </div>
                 </form>
             </div>

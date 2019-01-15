@@ -40,6 +40,8 @@
                         <!-- <button type="submit" class="btn btn-primary">添加</button>-->
                         {{ form.csrf_token }}
                         {{ form.submit }}
+                        <a class="btn btn-default" style="margin-left:10px;color: #367fa9"
+                           href="{{ url_for('admin.tag_list', page=1) }}">取消</a>
                     </div>
                 </form>
             </div>
