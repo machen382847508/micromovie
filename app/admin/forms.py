@@ -2,7 +2,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, FileField, TextAreaField, SelectField
 from wtforms.validators import DataRequired, ValidationError
-from app.models import Admin, Movie,Tag
+from app.models import Admin, Movie,Tag,Preview
 
 
 class LoginForm(FlaskForm):
@@ -175,3 +175,78 @@ class MovieForm(FlaskForm):
             "class": "btn btn-primary"
         }
     )
+
+class PreviewForm(FlaskForm):
+    title = StringField(
+        label="预告标题",
+        validators=[
+            DataRequired("请输入预告标题")
+        ],
+        description="预告标题",
+        render_kw={
+            "class":"form-control" ,
+            "id":"input_title" ,
+            "placeholder":"请输入预告标题！"
+        }
+    )
+
+    logo = FileField(
+        label="预告封面",
+        validators=[
+            DataRequired("请上传预告封面")
+        ],
+        description="预告封面",
+        render_kw={
+            "id":"input_logo"
+        }
+    )
+
+    submit = SubmitField(
+        label="编辑",
+        render_kw={
+            "class": "btn btn-primary"
+        }
+    )
+
+class UserForm(FlaskForm):
+
+    id = StringField(
+        label="编号",
+        description="编号"
+    )
+
+    name = StringField(
+        label="昵称",
+        description="昵称"
+    )
+
+    email = StringField(
+        label="邮箱",
+        description="邮箱"
+    )
+
+    phone = StringField(
+        label="电话",
+        description="电话"
+    )
+
+    face = TextAreaField(
+        label="头像",
+        description="头像"
+    )
+
+    addtime = StringField(
+        label="注册时间",
+        description="注册时间"
+    )
+
+    uuid = StringField(
+        label="唯一标志符",
+        description="唯一标志符"
+    )
+
+    info = StringField(
+        label="个性简介",
+        description="个性简介"
+    )
+
