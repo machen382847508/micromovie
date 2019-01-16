@@ -117,6 +117,7 @@ class Role(db.Model):
     name = db.Column(db.String(100), unique=True)  # 角色名称
     auths = db.Column(db.String(600))
     addtime = db.Column(db.DateTime, index=True, default=datetime.now)
+    admins = db.relationship('Admin', backref='role')  # 管理员外键关系关联
 
     def __repr__(self):
         return '<Role %r>' % self.name

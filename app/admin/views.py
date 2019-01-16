@@ -1,7 +1,7 @@
 # coding:utf8
 from . import admin,utils
-from flask import render_template, redirect, url_for, flash, session, request
-from app.admin.forms import LoginForm, TagForm, MovieForm, PreviewForm, UserForm,PwdForm,AuthForm,RoleForm
+from flask import render_template, redirect, url_for, flash, session, request,abort
+from app.admin.forms import LoginForm, TagForm, MovieForm, PreviewForm, UserForm,PwdForm,AuthForm,RoleForm,AdminForm
 from app.models import Admin, Tag, Movie, Preview, User, Comment,Moviecol,Oplog,Adminlog,Userlog,Auth,Role
 from functools import wraps
 from app import db, app
@@ -16,6 +16,23 @@ def tpl_extra():
         online_time=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     )
     return data
+
+#路由规则权限
+def admin_auth(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        admin = Admin.query.join(
+            Role
+        ).filter(Role.id == Admin.role_id, Admin.id == session["admin_id"]).first()
+        auths = admin.role.auths
+        auths = list(map(lambda v:int(v) , auths.split(",")))
+        auth_list = Auth.query.all()
+        urls = [v.url for v in auth_list for val in auths if val == v.id]
+        rule = request.url_rule
+        if str(rule) not in urls:
+            abort(404)
+        return func(*args, **kwargs)
+    return wrapper
 
 # 验证是否在登录状态
 def admin_login_req(func):
@@ -37,6 +54,7 @@ def change_filename(filename):
 
 @admin.route("/")
 @admin_login_req
+@admin_auth
 def index():
     return render_template("admin/index.html")
 
@@ -90,6 +108,7 @@ def pwd():
 
 @admin.route("/tag/add/", methods=['GET', 'POST'])
 @admin_login_req
+@admin_auth
 def tag_add():
     tagForm = TagForm()
     if tagForm.validate_on_submit():
@@ -113,6 +132,7 @@ def tag_add():
 # 标签列表分页
 @admin.route("/tag/list/<int:page>/", methods=['GET'])
 @admin_login_req
+@admin_auth
 def tag_list(page=None):
     if page is None:
         page = 1
@@ -125,6 +145,7 @@ def tag_list(page=None):
 # 删除标签
 @admin.route("/tag/del/<int:id>/", methods=['GET'])
 @admin_login_req
+@admin_auth
 def tag_del(id=None):
     tag = Tag.query.filter_by(id=id).first_or_404()
     db.session.delete(tag)
@@ -137,6 +158,7 @@ def tag_del(id=None):
 # 修改标签
 @admin.route("/tag/edit/<int:id>/", methods=['GET', 'POST'])
 @admin_login_req
+@admin_auth
 def tag_edit(id):
     tagform = TagForm()
     tag = Tag.query.get_or_404(id)
@@ -159,8 +181,8 @@ def tag_edit(id):
 @admin_login_req
 def movie_add():
     movieform = MovieForm()
-    movieform.tag_id.choices = [(v.id,v.name) for v in Tag.query.all()]
     if movieform.validate_on_submit():
+        movieform.tag_id.choices = [(v.id, v.name) for v in Tag.query.all()]
         data = movieform.data
         file_url = secure_filename(movieform.url.data.filename)
         file_logo = secure_filename(movieform.logo.data.filename)
@@ -192,7 +214,7 @@ def movie_add():
 
 
 # 电影列表
-@admin.route("/movie/list/<int:page>/")
+@admin.route("/movie/list/<int:page>/", methods=['GET','POST'])
 @admin_login_req
 def movie_list(page=None):
     if page is None:
@@ -479,8 +501,8 @@ def userloginlog_list(page = None):
 @admin_login_req
 def role_add():
     form = RoleForm()
-    form.auths.choices = [(v.id,v.name) for v in Auth.query.all()]
     if form.validate_on_submit():
+        form.auths.choices = [(v.id, v.name) for v in Auth.query.all()]
         data = form.data
         role = Role(
             name = data["name"],
@@ -501,6 +523,35 @@ def role_list(page = None):
     page_data = Role.query.order_by(Role.addtime.desc()).paginate(page=page, per_page=10)
     return render_template("admin/role_list.html",page_data=page_data)
 
+@admin.route("/role/edit/<int:id>",methods=['GET','POST'])
+@admin_login_req
+def role_edit(id):
+    form = RoleForm()
+    role = Role.query.get_or_404(int(id))
+    if request.method == "GET":
+        form.auths.data = list(map(lambda v:int(v), role.auths.split(",")))
+        form.name.data = role.name
+    if form.validate_on_submit():
+        data = form.data
+        role.name = data["name"]
+        role.auths = ",".join(map(lambda v:str(v),data["auths"]))
+        db.session.add(role)
+        db.session.commit()
+        flash("修改角色成功", "ok")
+        util.InsertOplog("修改角色成功:"+role.name+"-"+role.auths)
+        return redirect(url_for("admin.role_list",page = 1))
+    return render_template("admin/role_edit.html",form = form)
+
+
+@admin.route("/role/del/<int:id>", methods=['GET', 'POST'])
+@admin_login_req
+def role_del(id):
+    role = Role.query.filter_by(id=id).first_or_404()
+    db.session.delete(role)
+    db.session.commit()
+    flash("角色删除成功", "ok")
+    util.InsertOplog("删除角色成功:" + role.name)
+    return redirect(url_for('admin.role_list', page=1))
 
 @admin.route("/auth/add/", methods=['GET', 'POST'])
 @admin_login_req
@@ -528,7 +579,7 @@ def auth_list(page = None):
     page_data = Auth.query.order_by(Auth.addtime.desc()).paginate(page=page, per_page=10)
     return render_template("admin/auth_list.html",page_data = page_data)
 
-@admin.route("/auth/del/<int:id>",methods=['GET', 'POST'])
+@admin.route("/auth/del/<int:id>" ,methods=['GET', 'POST'])
 @admin_login_req
 def auth_del(id):
     auth = Auth.query.filter_by(id=id).first_or_404()
@@ -560,14 +611,34 @@ def auth_edit(id):
 
 
 
-@admin.route("/admin/add/")
+@admin.route("/admin/add/",methods=['GET', 'POST'])
 @admin_login_req
 def admin_add():
-    return render_template("admin/admin_add.html")
+    form = AdminForm()
+    if form.validate_on_submit():
+        form.role_id.choices = [(v.id, v.name) for v in Role.query.all()]
+        data=form.data
+        admin = Admin(
+            name=data["name"],
+            pwd=data["pwd"],
+            role_id = data["role_id"]
+        )
+        db.session.add(admin)
+        db.session.commit()
+        flash("管理员创建成功","ok")
+        util.InsertOplog("管理员创建成功"+data["name"])
+        return redirect(url_for('admin.admin_list', page=1))
+    return render_template("admin/admin_add.html",form = form)
 
 
-@admin.route("/admin/list/")
+@admin.route("/admin/list/<int:page>/",methods=['GET', 'POST'])
 @admin_login_req
-def admin_list():
-    return render_template("admin/admin_list.html")
+def admin_list(page = None):
+    if page is None:
+        page = 1
 
+    page_data = Admin.query.join(Role).filter( Admin.role_id == Role.id ).order_by(
+        Admin.addtime.desc()
+    ).paginate( page=page, per_page=10 )
+
+    return render_template("admin/admin_list.html",page_data=page_data)
