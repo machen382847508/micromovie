@@ -52,7 +52,13 @@
                             <td>{{ v.email }}</td>
                             <td>{{ v.phone }}</td>
                             <td>
-                                <img src="{{ url_for('static', filename='upload/'+v.face) }}" class="img-responsive center-block" width="80" height="80" alt="">
+                                {% if v.face %}
+                                <img src="{{ url_for('static', filename='upload/'+v.face) }}"
+                                     class="img-responsive center-block" width="80" height="80" alt="">
+                                {% else %}
+                                <img data-src="holder.js/50x50"
+                                     class="img-responsive center-block" width="80" height="80" alt="">
+                                {% endif %}
                             </td>
                             <td>{{ v.addtime }}</td>
                             <td>
@@ -78,6 +84,7 @@ $(document).ready(function(){
   $("#g_5").addClass("active")
   $("#g_5_1").addClass("active")
 });
+
 
 </script>
 {% endblock %}

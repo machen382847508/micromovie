@@ -44,7 +44,6 @@ $(function(){
 			prevX = ev.pageX;//随着拖动 不断更新 上一记录点
 			prevY = ev.pageY;
 
-			console.log(iSpeedX+"||"+iSpeedY)
 
 		});
 		$(document).mouseup(function(){

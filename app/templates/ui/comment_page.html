@@ -1,9 +1,9 @@
-{% macro page(data,url) %}<!--传入上下文url-->
+{% macro page(data,url,id) %}<!--传入上下文url-->
 {% if data %}
 <ul class="pagination pagination-sm no-margin pull-right">
-    <li><a href="{{ url_for(url,page=1) }}">首页</a></li>
+    <li><a href="{{ url_for(url,page=1,id = id) }}">首页</a></li>
     {% if data.has_prev %}
-    <li><a href="{{ url_for(url,page= data.prev_num) }}">上一页</a></li>
+    <li><a href="{{ url_for(url,page= data.prev_num,id = id) }}">上一页</a></li>
     {% else %}
     <li class="disabled"><a href="#">上一页</a></li>
     {% endif %}
@@ -11,15 +11,15 @@
         {% if p == data.page %}
          <li class="active"><a href="#">{{ p }}</a></li>
         {% else %}
-         <li><a href="{{ url_for(url,page =  p ) }}">{{ p }}</a></li>
+         <li><a href="{{ url_for(url,page =  p,id = id ) }}">{{ p }}</a></li>
         {% endif %}
     {% endfor %}
     {% if data.has_next %}
-    <li><a href="{{ url_for(url,page=data.next_num) }}">下一页</a></li>
+    <li><a href="{{ url_for(url,page=data.next_num,id=id) }}">下一页</a></li>
     {% else %}
     <li class="disabled"><a href="#">下一页</a></li>
     {% endif %}
-    <li><a href="{{ url_for(url,page=data.pages) }}">尾页</a></li>
+    <li><a href="{{ url_for(url,page=data.pages,id=id) }}">尾页</a></li>
 </ul>
 {% endif %}
 {% endmacro  %}

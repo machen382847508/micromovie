@@ -54,12 +54,12 @@ def change_filename(filename):
 
 @admin.route("/")
 @admin_login_req
-@admin_auth
 def index():
     return render_template("admin/index.html")
 
 
 @admin.route("/login/", methods=['GET', 'POST'])
+@admin_login_req
 def login():
     form = LoginForm()
     if form.validate_on_submit():
@@ -81,7 +81,7 @@ def login():
 def logout():
     session.pop("admin", None)
     session.pop("admin_id", None)
-    return redirect(url_for("admin.login"))
+    return render_template("admin/login.html")
 
 
 @admin.route("/pwd/", methods=['GET', 'POST'])
@@ -108,7 +108,6 @@ def pwd():
 
 @admin.route("/tag/add/", methods=['GET', 'POST'])
 @admin_login_req
-@admin_auth
 def tag_add():
     tagForm = TagForm()
     if tagForm.validate_on_submit():
@@ -133,7 +132,7 @@ def tag_add():
 @admin.route("/tag/list/<int:page>/", methods=['GET'])
 @admin_login_req
 @admin_auth
-def tag_list(page=None):
+def tag_list(page):
     if page is None:
         page = 1
     page_data = Tag.query.order_by(
@@ -145,7 +144,6 @@ def tag_list(page=None):
 # 删除标签
 @admin.route("/tag/del/<int:id>/", methods=['GET'])
 @admin_login_req
-@admin_auth
 def tag_del(id=None):
     tag = Tag.query.filter_by(id=id).first_or_404()
     db.session.delete(tag)
@@ -158,7 +156,6 @@ def tag_del(id=None):
 # 修改标签
 @admin.route("/tag/edit/<int:id>/", methods=['GET', 'POST'])
 @admin_login_req
-@admin_auth
 def tag_edit(id):
     tagform = TagForm()
     tag = Tag.query.get_or_404(id)
@@ -187,7 +184,7 @@ def movie_add():
         file_url = secure_filename(movieform.url.data.filename)
         file_logo = secure_filename(movieform.logo.data.filename)
         if not os.path.exists(app.config["UP_DIR"]):
-            os.chmod(app.config["UP_DIR"], "rw")
+            os.makedirs(app.config["UP_DIR"])
         url = change_filename(file_url)
         logo = change_filename(file_logo)
         movieform.url.data.save(app.config["UP_DIR"] + url)
@@ -216,7 +213,7 @@ def movie_add():
 # 电影列表
 @admin.route("/movie/list/<int:page>/", methods=['GET','POST'])
 @admin_login_req
-def movie_list(page=None):
+def movie_list(page):
     if page is None:
         page = 1
     page_data = Movie.query.join(Tag).filter(
@@ -322,7 +319,7 @@ def preview_add():
 
 @admin.route("/preview/list/<int:page>")
 @admin_login_req
-def preview_list(page=None):
+def preview_list(page):
     if page is None:
         page = 1
     page_data = Preview.query.order_by(
@@ -382,7 +379,7 @@ def preview_edit(id=None):
 
 @admin.route("/user/list/<int:page>/")
 @admin_login_req
-def user_list(page=None):
+def user_list(page):
     if page is None:
         page = 1
     page_data = User.query.order_by(
@@ -424,7 +421,7 @@ def user_del(id):
 
 @admin.route("/comment/list/<int:page>", methods=['GET', 'POST'])
 @admin_login_req
-def comment_list(page=None):
+def comment_list(page):
     if page is None:
         page = 1
     page_data = Comment.query.join(Movie).join(User).filter(
@@ -445,7 +442,7 @@ def comment_del(id):
 
 @admin.route("/moviecol/list/<int:page>", methods=['GET', 'POST'])
 @admin_login_req
-def moviecol_list(page=None):
+def moviecol_list(page):
     if page is None:
         page = 1
     page_data = Moviecol.query.join(Movie).join(User).\
