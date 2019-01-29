@@ -13,7 +13,7 @@
             <div class="media">
                 <div class="media-left">
                     {% if v.logo %}
-                    <a href="{{url_for('home.play',id = v.id,page=1)}}">
+                    <a href="{{url_for('home.vedio',id = v.id,page=1)}}">
                         <img class="media-object" src="{{url_for('static',filename='upload/'+v.logo)}}" alt="{{ v.title }}" width="131">
                     </a>
                     {% else %}
@@ -21,7 +21,7 @@
                     {% endif %}
                 </div>
                 <div class="media-body">
-                    <h4 class="media-heading">{{ v.title }}<a href="{{url_for('home.play',id = v.id)}}" class="label label-primary pull-right"><span class="glyphicon glyphicon-play"></span>播放影片</a></h4>
+                    <h4 class="media-heading">{{ v.title }}<a href="{{url_for('home.vedio',id = v.id,page=1)}}" class="label label-primary pull-right"><span class="glyphicon glyphicon-play"></span>播放影片</a></h4>
                     {{ v.info }}
                 </div>
             </div>

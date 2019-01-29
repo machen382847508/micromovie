@@ -1,10 +1,10 @@
 # coding:utf8
 from . import home
-from flask import render_template, redirect, url_for, flash, session, request
+from flask import render_template, redirect, url_for, flash, session, request, Response
 from app.home.forms import RegistForm, LoginForm, UserdetailForm, PwdForm, CommentForm
 from app.models import User, Comment, Movie, Userlog, Preview, Tag, Moviecol
 from app.home.utils import Utils
-from app import db, app
+from app import db, app, rd
 from functools import wraps
 import uuid, os, json
 from werkzeug.utils import secure_filename
@@ -300,3 +300,83 @@ def play(id=None, page=None):
     db.session.add(movie)
     db.session.commit()
     return render_template("home/play.html", movie=movie, form=form, page_data=page_data, comment_num=comment_num)
+
+
+@home.route("/vedio/<int:id>/<int:page>/", methods=['GET', 'POST'])
+def vedio(id=None, page=None):
+    movie = Movie.query.join(Tag).filter(
+        Tag.id == Movie.tag_id,
+        Movie.id == int(id)
+    ).first_or_404()
+
+    if page is None:
+        page = 1
+
+    page_data = Comment.query.join(Movie).join(User).filter(
+        movie.id == Movie.id, session["user_id"] == User.id) \
+        .order_by(Comment.addtime.desc()).paginate(page=page, per_page=10)
+
+    comment_num = Comment.query.join(Movie).join(User).filter(
+        movie.id == Movie.id, session["user_id"] == User.id).count()
+
+    movie.playnum = movie.playnum + 1
+    form = CommentForm()
+    if "user" in session and form.validate_on_submit():
+        data = form.data
+        comment = Comment(
+            content=data["content"],
+            movie_id=movie.id,
+            user_id=session["user_id"]
+        )
+        db.session.add(comment)
+        db.session.commit()
+        movie.commentnum = movie.commentnum + 1
+        db.session.add(movie)
+        db.session.commit()
+        flash("添加评论成功", "ok")
+        return redirect(url_for('home.vedio', id=movie.id, page=1))
+    db.session.add(movie)
+    db.session.commit()
+    return render_template("home/vedio.html", movie=movie, form=form, page_data=page_data, comment_num=comment_num)
+
+
+@home.route("/tmv3/", methods=['GET', 'POST'])
+def tm():
+    if request.method == "GET":
+        id = request.args.get("id")
+        key = "movie" + str(id)
+        if rd.llen(key):
+            msgs = rd.lrange(key, 0, 2999)
+            res = {
+                "code": 1,
+                "danmaku": [ json.loads(v.decode()) for v in msgs ]
+            }
+        else:
+            res = {
+                "code": 1,
+                "danmaku": []
+            }
+        resp = json.dumps(res)
+
+    if request.method == "POST":
+        dd = request.get_data()
+        data = json.loads(request.get_data().decode())
+        msg = {
+            "__v": 0,
+            "author": data["author"],
+            "time": data["time"],
+            "text": data["text"],
+            "color": data["color"],
+            "type": data["type"],
+            "ip": request.remote_addr,
+            "_id": datetime.now().strftime("%Y%m%d%H%M%S") + str(uuid.uuid4())
+        }
+        res = {
+            "code": 1,
+            "data": msg
+        }
+
+        resp = json.dumps(res)
+        rd.lpush("movie" + str(data["id"]), json.dumps(msg))
+
+    return  Response(resp, mimetype="application/json")
